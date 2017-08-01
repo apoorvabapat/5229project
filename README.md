@@ -10,3 +10,6 @@ o/p: Changes lights positions
 j/k: Makes the blue bug move
 w/W: Wind wffect
 a/A: Toggle axes
+
+
+I have used display lists for all trees. Also I have included normals calculation file here. 
