@@ -13,7 +13,7 @@
  */
 #include "CSCIx229.h"
 int axes=1;       //  Display axes
-int mode=1;       //  Display cockpit
+int mode=0;       //  Display cockpit
 int th=0;         //  Azimuth of view angle
 int ph=30;         //  Elevation of view angle
 int fov=25; 
@@ -71,7 +71,7 @@ float angle=0.0;
 // actual vector representing the camera's direction
 float lx=0.0f,lz=-1.0f;
 // XZ position of the camera
-float x=2.5,z=3.1;
+double camerax=2.5,cameraz=3.1;
 int ground1[2];
 int leaf[5];
 int sky[2];
@@ -171,8 +171,8 @@ static void bug(double x, double y,double z, double r,double th)
    float Emission[]  = {0.0,0.0,0.01*emission,1.0};
    //  Save transformation
    glPushMatrix();
-   
-   glTranslated(x,y,z+incrz);
+
+   glTranslated(x+incrz*0.01,y,z);
    glRotated(th,0,1,0);
    glColor3f(1,0,0);
    glMaterialf(GL_FRONT,GL_SHININESS,shiny+2);
@@ -387,14 +387,14 @@ void Drawleaf1(double th,int x,int y,double dx, double dy,double dz)
    glEnable(GL_TEXTURE_2D);
    glBindTexture(GL_TEXTURE_2D,leaf[0]);
         glBegin(GL_TRIANGLES); 
-          glNormal3f(-0.1, 0, 0.25); 
+          glNormal3f(-0.371390676354, 0.0 ,0.928476690885); 
           glTexCoord2f(0.5,0);  glVertex3f(0, 0, 0); 
           glTexCoord2f(1,0.5); glVertex3f(0.25, 0.25, 0.1); 
           glTexCoord2f(0.5,1); glVertex3f(0, 0.5, 0); 
           
           glColor3f(x-0.5,y,0);
 
-          glNormal3f(0.1, 0, 0.25); 
+          glNormal3f(0.371390676354, -0.0, 0.928476690885); 
           glTexCoord2f(0.5,0);glVertex3f(0, 0, 0); 
           glTexCoord2f(0.5,1);glVertex3f(0, 0.5, 0); 
           glTexCoord2f(0,0.5);glVertex3f(-0.25, 0.25, 0.1); 
@@ -432,7 +432,6 @@ void yellowleaf(double th,int x,int y,double dx, double dy,double dz)
 { 
    int t;
    glPushMatrix();
-   printf("%d\n",rand()%3 );
    t=rand()%3;
 
    if(wind)
@@ -636,13 +635,18 @@ void display()
 
    switch(mode)
    {
+    case 0: // Orthogonal
+
+      glRotatef(ph,1,0,0);
+      glRotatef(th,0,1,0);
+      break;
 
     case 1: //Overhead Perspective
       Ex = -2*dim*Sin(th)*Cos(ph);
       Ey = +2*dim        *Sin(ph);
       Ez = +2*dim*Cos(th)*Cos(ph);
 
-      gluLookAt(Ex,Ey,Ez , 6,0,4 , 0,Cos(ph),0);
+      gluLookAt(Ex,Ey,Ez , 0,0,0 , 0,Cos(ph),0);
       break;
 
     case 2: // First Person Perspective
@@ -650,7 +654,7 @@ void display()
       Ey = +2*dim        *Sin(ph);
       Ez = +2*dim*Cos(th)*Cos(ph);
 
-      gluLookAt(  x, 6.0f, z, x+lx, 0.8f,  z+lz, 0.0f, 1.0f,  0.0f);
+      gluLookAt(6.000000,5.000000,20.980762, camerax+lx, 0.8f,  cameraz+lz, 0.0f, 1.0f,  0.0f);
 
 
    }
@@ -780,7 +784,7 @@ glHint (GL_FOG_HINT, GL_NICEST); // set the fog to look the
  */
 void special(int key,int x,int y)
 {
-  float fraction=0.02f;
+  float fraction=0.04f;
    //  Right arrow key - increase angle by 5 degrees
   if (key == GLUT_KEY_RIGHT)
   { 
@@ -801,17 +805,23 @@ void special(int key,int x,int y)
    //  Up arrow key - increase elevation by 5 degrees
    else if (key == GLUT_KEY_UP)
    {
-    x += lx * fraction;
-      z += lz * fraction;
-      ph+=5;
+      if (mode==2)
+      {           
 
+         // camerax = camerax +lx * fraction;
+         printf("camera before %f\n",cameraz);
+         cameraz += lz * fraction;
+         printf("camera after %f\n",cameraz);
+      }
+      else
+         ph+=5;
    }
    //  Down arrow key - decrease elevation by 5 degrees
    else if (key == GLUT_KEY_DOWN)
    {
 
-      x -= lx * fraction;
-      z -= lz * fraction;
+      camerax -= lx * fraction;
+      cameraz -= lz * fraction;
       ph-=5;
    }
    //  Keep angles to +/-360 degrees
@@ -845,6 +855,7 @@ void key(unsigned char ch,int x,int y)
    else if (ch == 'm' || ch == 'M')
    {
       mode = (mode+1)%3;
+      printf("%d\n",mode);
    }
    else if (ch == 'g')
       fov--;
@@ -922,7 +933,7 @@ int main(int argc,char* argv[])
    glutSpecialFunc(special);
    glutKeyboardFunc(key);
    glutIdleFunc(idle);
-   ground1[0] = LoadTexBMP("ground.bmp");
+   ground1[0] = LoadTexBMP("gr1.bmp");
    leaf[0]=LoadTexBMP("leaf1.bmp");
       leaf[1]=LoadTexBMP("yleaf.bmp");
 
